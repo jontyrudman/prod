@@ -8,7 +8,7 @@
 _/
 ```
 
-> A heavier `touch`; _prod_uce.
+> Heavier than `touch`; **prod**uce.
 
 This is super WIP, but I thought I'd start on this project today (17th Dec 2019).
 Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
