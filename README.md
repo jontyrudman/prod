@@ -23,5 +23,5 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 - [ ] Take language and name arguments
 - [ ] Error checking for project names (git repo naming requirements)
 - [ ] Use access tokens to set up new repositories
-- [ ] Allow the use of arguments to temporarily adjust config for a specific project creation
+- [x] Allow the use of arguments to temporarily adjust config for a specific project creation
 - [ ] Add more languages
