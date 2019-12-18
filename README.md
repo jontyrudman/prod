@@ -20,8 +20,13 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 ### TODO
 
 - [x] Read the config file correctly
-- [ ] Take language and name arguments
-- [ ] Error checking for project names (git repo naming requirements)
-- [ ] Use access tokens to set up new repositories
+- [x] Take language and name arguments
+- [x] Error checking for project names (git repo naming requirements)
+- [x] Use access tokens to set up new repositories
 - [x] Allow the use of arguments to temporarily adjust config for a specific project creation
+- [ ] Limit length of project names and template names
+- [ ] Develop more discreet access token storage
+- [ ] Add a --nogit flag
+- [ ] Find and replace occurrences of `insert_proj_name_here` in both file names and Makefiles
+- [ ] Run scripts in the root-level of a template directory after copying
 - [ ] Add more languages
