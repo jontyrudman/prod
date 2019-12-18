@@ -11,14 +11,16 @@ remove_scripts_noconfirm = false
 [git]
 ; Don't set up a git repo by default
 use_git = false
-git_username = 
+git_username =
 ; Don't use ssh by default
 git_ssh = false
 ; git provider name.
 ; Supported:
 ; - gitlab
 ; - github
-git_provider = 
+git_provider = gitlab
 git_access_token = 
+; Attempt to make new repos private by default
+git_private = true
 
 # vim: ft=dosini cms=#%s
