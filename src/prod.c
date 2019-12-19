@@ -221,6 +221,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
         "use_git is set to true but you haven't set either the git_provider, "
         "git_username or git_access_token in the config!\n");
     free(repo_name);
+    repo_name = NULL;
     return -1;
   }
 
@@ -240,6 +241,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
   } else {
     printf("Your git_provider needs to be 'gitlab' or 'github'.");
     free(repo_name);
+    repo_name = NULL;
     return -1;
   }
 
@@ -259,6 +261,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
   chdir(proj_name);
   printf("Attempting to set up %s...\n", repo_name);
   free(repo_name);
+  repo_name = NULL;
 
   /* Ensure repo doesn't already exist */
   if (system(commands[0]) == -1) {
