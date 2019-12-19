@@ -174,28 +174,26 @@ int copy_dir(configuration *config, const char *proj_name,
  * - all upper-case chars made lower-case
  * - if the project name is longer than 100 chars, cut down to 100
  */
-char *gen_git_name(const char *proj_name) {
-  int new_len = strlen(proj_name) > 100 ? 100 : strlen(proj_name);
-  char *git_name = calloc(new_len + 1, sizeof(char));
+void gen_git_name(const char *proj_name, char *git_name, int len) {
   int i;
 
-  for (i = 0; i < new_len; i++) {
+  for (i = 0; i < len; i++) {
     if (!(isalnum(proj_name[i]) || proj_name[i] == '-' || proj_name[i] == '_'))
       git_name[i] = '-';
     else {
       git_name[i] = tolower(proj_name[i]);
     }
   }
-
   git_name[i] = '\0';
-  return git_name;
 }
 
 int new_git_repo(configuration *config, const char *proj_name) {
-  char *repo_name = gen_git_name(proj_name);
+  int repo_name_len = strlen(proj_name) > 100 ? 100 : strlen(proj_name);
+  char *repo_name = calloc(repo_name_len + 1, sizeof(char));
   char commands[7][300];
   char *github_private = config->git_private == 1 ? "true" : "false";
   char *gitlab_private = config->git_private == 1 ? "private" : "public";
+  gen_git_name(proj_name, repo_name, repo_name_len);
 
   if ((strcmp(config->git_provider, "") == 0) ||
       (strcmp(config->git_username, "") == 0) ||
@@ -203,6 +201,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
     printf(
         "use_git is set to true but you haven't set either the git_provider, "
         "git_username or git_access_token in the config!\n");
+    free(repo_name);
     return -1;
   }
 
@@ -221,6 +220,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
             config->git_access_token, repo_name, gitlab_private);
   } else {
     printf("Your git_provider needs to be 'gitlab' or 'github'.");
+    free(repo_name);
     return -1;
   }
 
@@ -239,6 +239,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
 
   chdir(proj_name);
   printf("Attempting to set up %s...\n", repo_name);
+  free(repo_name);
 
   /* Ensure repo doesn't already exist */
   if (system(commands[0]) == -1) {
