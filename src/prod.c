@@ -209,14 +209,14 @@ int new_git_repo(configuration *config, const char *proj_name) {
   if (strcmp(config->git_provider, "github") == 0) {
     sprintf(commands[0],
             "curl -u '%s:%s' https://api.github.com/user/repos -d "
-            "'{\"name\":\"%s\", \"private\":\"%s\"}' > git_output.log",
+            "'{\"name\":\"%s\", \"private\":\"%s\"}' > response.json",
             config->git_username, config->git_access_token, repo_name,
             github_private);
   } else if (strcmp(config->git_provider, "gitlab") == 0) {
     sprintf(commands[0],
             "curl -H \"Content-Type:application/json\" "
             "https://gitlab.com/api/v4/projects?private_token=%s -d '{ "
-            "\"name\": \"%s\", \"visibility\": \"%s\" }' > git_output.log",
+            "\"name\": \"%s\", \"visibility\": \"%s\" }' > response.json",
             config->git_access_token, repo_name, gitlab_private);
   } else {
     printf("Your git_provider needs to be 'gitlab' or 'github'.");
@@ -248,7 +248,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
   }
   char buffer[150];
   FILE *fptr;
-  if ((fptr = fopen("git_output.log", "r")) == NULL) {
+  if ((fptr = fopen("response.json", "r")) == NULL) {
     printf("Error opening file\n");
     // Program exits if file pointer returns NULL.
     return -1;
@@ -258,8 +258,8 @@ int new_git_repo(configuration *config, const char *proj_name) {
     fscanf(fptr, "%150[^\n]\n", buffer);
     fscanf(fptr, "%150[^\n]\n", buffer);
     fclose(fptr);
-    if (strcmp(buffer, "  \"message\": \"Repository creation failed.\",\n")) {
-      printf("Repository is likely to already exist!\n");
+    if (strcmp(buffer, "\"message\": \"Repository creation failed.\",") == 0) {
+      printf("Repository already exists!\n");
       return -1;
     }
   } else if (strcmp(config->git_provider, "gitlab") == 0) {
@@ -267,14 +267,14 @@ int new_git_repo(configuration *config, const char *proj_name) {
     fclose(fptr);
     if (strcmp(buffer, "{\"message\":{\"name\":[\"has already been "
                        "taken\"],\"path\":[\"has already been "
-                       "taken\"],\"limit_reached\":[]}}\n")) {
-      printf("Repository is likely to already exist!\n");
+                       "taken\"],\"limit_reached\":[]}}\0") == 0) {
+      printf("Repository already exists!\n");
       return -1;
     }
   }
 
   /* Remove the temporary output */
-  remove("git_output.log");
+  /* remove("response.json"); */
 
   for (int i = 1; i < 7; i++) {
     if (system(commands[i]) == -1) {
