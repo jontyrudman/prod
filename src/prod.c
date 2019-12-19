@@ -173,18 +173,37 @@ int copy_dir(configuration *config, const char *proj_name,
  * - non-alphanum chars other than '-' and '_' are replaced with '-'
  * - all upper-case chars made lower-case
  * - if the project name is longer than 100 chars, cut down to 100
+ * - cut off trailing and preceding non-alnum chars to make git paths and names
+ *   the same on both github and gitlab
  */
 void gen_git_name(const char *proj_name, char *git_name, int len) {
   int i;
+  int j = 0;
+  int new_len = len;
 
-  for (i = 0; i < len; i++) {
-    if (!(isalnum(proj_name[i]) || proj_name[i] == '-' || proj_name[i] == '_'))
-      git_name[i] = '-';
-    else {
-      git_name[i] = tolower(proj_name[i]);
+  /* Shorten new_len to the last alnum in git_name */
+  for (i = len - 1; i > -1; i--) {
+    if (!isalnum(proj_name[i])) {
+      new_len--;
+    } else {
+      break;
     }
   }
-  git_name[i] = '\0';
+
+  for (i = 0; i < new_len; i++) {
+    if (isalnum(proj_name[i])) {
+      git_name[j] = tolower(proj_name[i]);
+      j++;
+    } else if ((proj_name[i] == '-' || proj_name[i] == '_') && j != 0) {
+      git_name[j] = proj_name[i];
+      j++;
+    } else if (j != 0) {
+      git_name[j] = '-';
+      j++;
+    }
+  }
+
+  git_name[j] = '\0';
 }
 
 int new_git_repo(configuration *config, const char *proj_name) {
@@ -274,7 +293,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
   }
 
   /* Remove the temporary output */
-  /* remove("response.json"); */
+  remove("response.json");
 
   for (int i = 1; i < 7; i++) {
     if (system(commands[i]) == -1) {
