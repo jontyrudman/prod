@@ -68,8 +68,6 @@ static int handler(void *user, const char *section, const char *name,
     read_bool(&(pconfig->git_ssh), value, name);
   } else if (MATCH("git", "git_provider")) {
     pconfig->git_provider = strdup(value);
-  } else if (MATCH("git", "git_access_token")) {
-    pconfig->git_access_token = strdup(value);
   } else if (MATCH("git", "git_private")) {
     read_bool(&(pconfig->git_private), value, name);
   } else {
@@ -90,6 +88,15 @@ int load_config(configuration *config, const char *path) {
   wordexp(strdup(config->template_directory), &exp_result, 0);
   config->template_directory = strdup(exp_result.we_wordv[0]);
   wordfree(&exp_result);
+
+  /* Get configuration variables from environment */
+  char *token = getenv("PROD_GIT_ACCESS_TOKEN");
+  if (token == NULL) {
+    printf("Git access token not found! PROD_GIT_ACCESS_TOKEN environment "
+           "variable not set\n");
+  } else {
+    config->git_access_token = strdup(token);
+  }
 
   /* purely for testing */
   printf("Config at %s loaded.\n", path);
