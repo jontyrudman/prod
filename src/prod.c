@@ -91,10 +91,7 @@ int load_config(configuration *config, const char *path) {
 
   /* Get configuration variables from environment */
   char *token = getenv("PROD_GIT_ACCESS_TOKEN");
-  if (token == NULL) {
-    printf("Git access token not found! PROD_GIT_ACCESS_TOKEN environment "
-           "variable not set\n");
-  } else {
+  if (token != NULL) {
     config->git_access_token = strdup(token);
   }
 
@@ -226,7 +223,8 @@ int new_git_repo(configuration *config, const char *proj_name) {
       (strcmp(config->git_access_token, "") == 0)) {
     printf(
         "use_git is set to true but you haven't set either the git_provider, "
-        "git_username or git_access_token in the config!\n");
+        "git_username in the config, or the PROD_GIT_ACCESS_TOKEN environment "
+        "variable!\n");
     free(repo_name);
     repo_name = NULL;
     return -1;
