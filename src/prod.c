@@ -90,10 +90,11 @@ int load_config(configuration *config, const char *path) {
   wordfree(&exp_result);
 
   /* Get configuration variables from environment */
-  char* token = getenv("PROD_GIT_ACCESS_TOKEN");
-  if (token == NULL){
-    printf("WARNING: PROD_GIT_ACCESS_TOKEN environment variable not set");
-  }else{
+  char *token = getenv("PROD_GIT_ACCESS_TOKEN");
+  if (token == NULL) {
+    printf("Git access token not found! PROD_GIT_ACCESS_TOKEN environment "
+           "variable not set\n");
+  } else {
     config->git_access_token = strdup(token);
   }
 
