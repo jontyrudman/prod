@@ -19,7 +19,7 @@ git_ssh = false
 ; - gitlab
 ; - github
 git_provider = gitlab
-git_access_token = 
+; git_access_token = 
 ; Attempt to make new repos private by default
 git_private = true
 

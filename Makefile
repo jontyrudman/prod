@@ -33,7 +33,7 @@ prod: $(OBJECTS)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf *.o prod
+	rm -rf *.o prod src/*.o
 
 rebuild: clean all
 
