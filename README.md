@@ -33,7 +33,7 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 - [x] Allow the use of arguments to temporarily adjust config for a specific project creation
 - [x] Reduce function length and handle command length more safely
 - [x] Develop more discreet access token storage
-- [ ] Add a --nogit flag
+- [x] Add a --nogit flag
 - [ ] Find and replace occurrences of `insert_proj_name_here` in both file names and Makefiles
 - [ ] Run scripts in the root-level of a template directory after copying
 - [ ] Add more languages
