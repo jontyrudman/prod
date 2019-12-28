@@ -228,24 +228,21 @@ int git_opts_valid(configuration *config, char **repo_name) {
   return 1;
 }
 
-/* Generates all of the system commands for setting up a git repository.
- * The number of commands is 7 */
+/* Generates all of the system commands for setting up a git repository. */
 int gen_git_commands(configuration *config,
                      char commands[GIT_COMMANDS_X][GIT_COMMANDS_Y],
                      char **repo_name) {
   char *github_private = config->git_private == 1 ? "true" : "false";
   char *gitlab_private = config->git_private == 1 ? "private" : "public";
-  char create_remote[GIT_COMMANDS_Y];
-  char link_remote[GIT_COMMANDS_Y];
 
   if (strcmp(config->git_provider, "github") == 0) {
-    sprintf(create_remote,
+    sprintf(commands[0],
             "curl -u '%s:%s' https://api.github.com/user/repos -d "
             "'{\"name\":\"%s\", \"private\":\"%s\"}' > response.json",
             config->git_username, config->git_access_token, *repo_name,
             github_private);
   } else if (strcmp(config->git_provider, "gitlab") == 0) {
-    sprintf(create_remote,
+    sprintf(commands[0],
             "curl -H \"Content-Type:application/json\" "
             "https://gitlab.com/api/v4/projects?private_token=%s -d '{ "
             "\"name\": \"%s\", \"visibility\": \"%s\" }' > response.json",
@@ -256,31 +253,17 @@ int gen_git_commands(configuration *config,
     repo_name = NULL;
     return 0;
   }
-
-  if (config->git_ssh == 1) {
-    sprintf(link_remote, "git remote add origin git@%s.com:%s/%s.git",
-            config->git_provider, config->git_username, *repo_name);
-  } else {
-    sprintf(link_remote, "git remote add origin https://%s.com/%s/%s.git",
-            config->git_provider, config->git_username, *repo_name);
-  }
-
-  if (strlen(create_remote) > GIT_COMMANDS_Y) {
-    printf("Error: Remote repository creation command too long! Maybe shorten "
-           "your project name?");
-    return 0;
-  }
-  if (strlen(link_remote) > GIT_COMMANDS_Y) {
-    printf("Error: Remote repository linking command too long! Maybe shorten "
-           "your project name?");
-    return 0;
-  }
-  strcpy(commands[0], create_remote);
   strcpy(commands[1], "touch README.md");
   strcpy(commands[2], "git init .");
   strcpy(commands[3], "git add .");
   strcpy(commands[4], "git commit -m \"Initial commit\"");
-  strcpy(commands[5], link_remote);
+  if (config->git_ssh == 1) {
+    sprintf(commands[5], "git remote add origin git@%s.com:%s/%s.git",
+            config->git_provider, config->git_username, *repo_name);
+  } else {
+    sprintf(commands[5], "git remote add origin https://%s.com/%s/%s.git",
+            config->git_provider, config->git_username, *repo_name);
+  }
   strcpy(commands[6], "git push -u origin master");
   return 1;
 }
