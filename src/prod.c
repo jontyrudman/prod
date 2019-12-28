@@ -20,6 +20,8 @@
                      .git_provider = "",                                       \
                      .git_access_token = "",                                   \
                      .git_private = 1}
+#define GIT_COMMANDS_X 7
+#define GIT_COMMANDS_Y 500
 
 typedef struct {
   const char *template_directory;
@@ -76,6 +78,7 @@ static int handler(void *user, const char *section, const char *name,
   return 1;
 }
 
+/* Loads the configuration file at path */
 int load_config(configuration *config, const char *path) {
   wordexp_t exp_result;
 
@@ -89,13 +92,12 @@ int load_config(configuration *config, const char *path) {
   config->template_directory = strdup(exp_result.we_wordv[0]);
   wordfree(&exp_result);
 
-  /* Get configuration variables from environment */
+  /* Get access token from environment */
   char *token = getenv("PROD_GIT_ACCESS_TOKEN");
   if (token != NULL) {
     config->git_access_token = strdup(token);
   }
 
-  /* purely for testing */
   printf("Config at %s loaded.\n", path);
   return 0;
 }
@@ -180,7 +182,7 @@ int copy_dir(configuration *config, const char *proj_name,
  * - cut off trailing and preceding non-alnum chars to make git paths and names
  *   the same on both github and gitlab
  */
-void gen_git_name(const char *proj_name, char *git_name, int len) {
+void gen_repo_name(const char *proj_name, char *git_name, int len) {
   int i;
   int j = 0;
   int new_len = len;
@@ -210,14 +212,7 @@ void gen_git_name(const char *proj_name, char *git_name, int len) {
   git_name[j] = '\0';
 }
 
-int new_git_repo(configuration *config, const char *proj_name) {
-  int repo_name_len = strlen(proj_name) > 100 ? 100 : strlen(proj_name);
-  char *repo_name = calloc(repo_name_len + 1, sizeof(char));
-  char commands[7][300];
-  char *github_private = config->git_private == 1 ? "true" : "false";
-  char *gitlab_private = config->git_private == 1 ? "private" : "public";
-  gen_git_name(proj_name, repo_name, repo_name_len);
-
+int git_opts_valid(configuration *config, char **repo_name) {
   if ((strcmp(config->git_provider, "") == 0) ||
       (strcmp(config->git_username, "") == 0) ||
       (strcmp(config->git_access_token, "") == 0)) {
@@ -225,53 +220,76 @@ int new_git_repo(configuration *config, const char *proj_name) {
         "use_git is set to true but you haven't set either the git_provider, "
         "git_username in the config, or the PROD_GIT_ACCESS_TOKEN environment "
         "variable!\n");
-    free(repo_name);
-    repo_name = NULL;
-    return -1;
+    free(*repo_name);
+    *repo_name = NULL;
+    return 0;
   }
 
-  /* Set up command list */
+  return 1;
+}
+
+/* Generates all of the system commands for setting up a git repository.
+ * The number of commands is 7 */
+int gen_git_commands(configuration *config,
+                     char commands[GIT_COMMANDS_X][GIT_COMMANDS_Y],
+                     char **repo_name) {
+  char *github_private = config->git_private == 1 ? "true" : "false";
+  char *gitlab_private = config->git_private == 1 ? "private" : "public";
+  char create_remote[GIT_COMMANDS_Y];
+  char link_remote[GIT_COMMANDS_Y];
+
   if (strcmp(config->git_provider, "github") == 0) {
-    sprintf(commands[0],
+    sprintf(create_remote,
             "curl -u '%s:%s' https://api.github.com/user/repos -d "
             "'{\"name\":\"%s\", \"private\":\"%s\"}' > response.json",
-            config->git_username, config->git_access_token, repo_name,
+            config->git_username, config->git_access_token, *repo_name,
             github_private);
   } else if (strcmp(config->git_provider, "gitlab") == 0) {
-    sprintf(commands[0],
+    sprintf(create_remote,
             "curl -H \"Content-Type:application/json\" "
             "https://gitlab.com/api/v4/projects?private_token=%s -d '{ "
             "\"name\": \"%s\", \"visibility\": \"%s\" }' > response.json",
-            config->git_access_token, repo_name, gitlab_private);
+            config->git_access_token, *repo_name, gitlab_private);
   } else {
-    printf("Your git_provider needs to be 'gitlab' or 'github'.");
+    printf("Your git_provider needs to be 'gitlab' or 'github'.\n");
     free(repo_name);
     repo_name = NULL;
-    return -1;
+    return 0;
   }
 
-  sprintf(commands[1], "touch README.md");
-  sprintf(commands[2], "git init .");
-  sprintf(commands[3], "git add .");
-  sprintf(commands[4], "git commit -m \"Initial commit\"");
   if (config->git_ssh == 1) {
-    sprintf(commands[5], "git remote add origin git@%s.com:%s/%s.git",
-            config->git_provider, config->git_username, repo_name);
+    sprintf(link_remote, "git remote add origin git@%s.com:%s/%s.git",
+            config->git_provider, config->git_username, *repo_name);
   } else {
-    sprintf(commands[5], "git remote add origin https://%s.com/%s/%s.git",
-            config->git_provider, config->git_username, repo_name);
+    sprintf(link_remote, "git remote add origin https://%s.com/%s/%s.git",
+            config->git_provider, config->git_username, *repo_name);
   }
-  sprintf(commands[6], "git push -u origin master");
 
-  chdir(proj_name);
-  printf("Attempting to set up %s...\n", repo_name);
-  free(repo_name);
-  repo_name = NULL;
+  if (strlen(create_remote) > GIT_COMMANDS_Y) {
+    printf("Error: Remote repository creation command too long! Maybe shorten "
+           "your project name?");
+    return 0;
+  }
+  if (strlen(link_remote) > GIT_COMMANDS_Y) {
+    printf("Error: Remote repository linking command too long! Maybe shorten "
+           "your project name?");
+    return 0;
+  }
+  strcpy(commands[0], create_remote);
+  strcpy(commands[1], "touch README.md");
+  strcpy(commands[2], "git init .");
+  strcpy(commands[3], "git add .");
+  strcpy(commands[4], "git commit -m \"Initial commit\"");
+  strcpy(commands[5], link_remote);
+  strcpy(commands[6], "git push -u origin master");
+  return 1;
+}
 
-  /* Ensure repo doesn't already exist */
+int git_repo_exists(configuration *config,
+                    char commands[GIT_COMMANDS_X][GIT_COMMANDS_Y]) {
   if (system(commands[0]) == -1) {
     printf("Creation and initialisation of git repository failed.\n");
-    return -1;
+    return 0;
   }
   char buffer[150];
   FILE *fptr;
@@ -287,7 +305,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
     fclose(fptr);
     if (strcmp(buffer, "\"message\": \"Repository creation failed.\",") == 0) {
       printf("Repository already exists!\n");
-      return -1;
+      return 1;
     }
   } else if (strcmp(config->git_provider, "gitlab") == 0) {
     fscanf(fptr, "%150[^\n]\n", buffer);
@@ -296,9 +314,32 @@ int new_git_repo(configuration *config, const char *proj_name) {
                        "taken\"],\"path\":[\"has already been "
                        "taken\"],\"limit_reached\":[]}}\0") == 0) {
       printf("Repository already exists!\n");
-      return -1;
+      return 1;
     }
   }
+  return 0;
+}
+
+int new_git_repo(configuration *config, const char *proj_name) {
+  int repo_name_len = strlen(proj_name) > 100 ? 100 : strlen(proj_name);
+  char *repo_name = calloc(repo_name_len + 1, sizeof(char));
+  char commands[GIT_COMMANDS_X][GIT_COMMANDS_Y];
+
+  gen_repo_name(proj_name, repo_name, repo_name_len);
+
+  if (!git_opts_valid(config, &repo_name))
+    return -1;
+
+  if (!gen_git_commands(config, commands, &repo_name))
+    return -1;
+
+  chdir(proj_name);
+  printf("Attempting to set up %s...\n", repo_name);
+  free(repo_name);
+  repo_name = NULL;
+
+  if (git_repo_exists(config, commands))
+    return -1;
 
   /* Remove the temporary output */
   remove("response.json");
