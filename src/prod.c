@@ -111,6 +111,8 @@ void help_page() {
          "for\n");
   printf("  -c --config [STRING]    Set the config file for this "
          "operation\n");
+  printf("  --nogit                 Disable git integration for this "
+         "operation\n");
 }
 
 /* List of available templates */
@@ -337,14 +339,13 @@ int new_git_repo(configuration *config, const char *proj_name) {
   return 0;
 }
 
-int parse_args(int argc, char *argv[], const char **config_path,
-               const char **proj_name, const char **template_name,
-               int *list_flag) {
+int parse_args(int argc, char *argv[], configuration *config,
+               const char **proj_name, const char **template_name) {
+  wordexp_t exp_result;
+  const char *config_path = "~/.config/prod/config";
+
+  /* Look for custom config first */
   for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
-      help_page();
-      return 1;
-    }
     if (strcmp(argv[i], "-c") == 0 || strcmp(argv[i], "--config") == 0) {
       if (argv[i + 1] == NULL) {
         printf("Missing arguments! See --help for usage.");
@@ -354,13 +355,24 @@ int parse_args(int argc, char *argv[], const char **config_path,
         printf("Missing arguments! See --help for usage.");
         return -1;
       }
-      *config_path = argv[i + 1];
+      config_path = argv[i + 1];
       /* Skip the next arg */
       i++;
     }
+  }
+
+  /* Expand path and cut final slash if there is one, and load config */
+  wordexp(config_path, &exp_result, 0);
+  load_config(config, strdup(exp_result.we_wordv[0]));
+  wordfree(&exp_result);
+
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+      help_page();
+      return 1;
+    }
     if (strcmp(argv[i], "-l") == 0 || strcmp(argv[i], "--list") == 0) {
-      /* Need to wait for config to be loaded, list is dependent on it */
-      *list_flag = 1;
+      list_languages(config);
     }
     if (argv[i][0] != '-') {
       *proj_name = argv[i];
@@ -376,42 +388,27 @@ int parse_args(int argc, char *argv[], const char **config_path,
       /* Skip the next arg */
       i++;
     }
+    if (strcmp(argv[i], "--nogit") == 0) {
+      config->use_git = 0;
+    }
   }
   return 0;
 }
 
 int main(int argc, char *argv[]) {
-  const char *config_path = "~/.config/prod/config";
   const char *proj_name = "";
   const char *template_name = "";
-  int list_flag = 0;
-  int *plist_flag = &list_flag;
   int result = 0;
-  wordexp_t exp_result;
 
   /* Initialise config to default values */
   INIT_CONFIG(config);
 
   /* Validate arguments */
-  result = parse_args(argc, argv, &config_path, &proj_name, &template_name,
-                      plist_flag);
+  result = parse_args(argc, argv, &config, &proj_name, &template_name);
   if (result == -1)
     return EXIT_FAILURE;
   if (result == 1)
     return 0;
-
-  /* Expand path and cut final slash if there is one */
-  wordexp(config_path, &exp_result, 0);
-  config_path = strdup(exp_result.we_wordv[0]);
-  wordfree(&exp_result);
-
-  load_config(&config, config_path);
-
-  /* Print list of languages available in the template directory */
-  if (list_flag == 1) {
-    list_languages(&config);
-    return 0;
-  }
 
   if (strlen(proj_name) == 0 || strlen(template_name) == 0) {
     printf(
