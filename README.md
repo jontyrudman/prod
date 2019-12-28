@@ -17,7 +17,14 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 2. use a config file and otherwise questions to determine whether the user would like to run setup scripts and remove them,
 3. as well as create a new GitLab/GitHub repo based on the config/flags.
 
-### TODO
+## Usage
+
+1. Clone the repository and put `prod` somewhere in your `PATH`.
+2. Unpack the config and template folders in `defaults/` to their respective folders in your home directory.
+3. Read the config file comments and set up accordingly.
+4. If you want to use `git` with `prod`, set the `PROD_TOKEN` variable to your GitLab/GitHub access token for running `prod`.
+
+## TODO
 
 - [x] Read the config file correctly
 - [x] Take language and name arguments
