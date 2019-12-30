@@ -319,7 +319,6 @@ int new_git_repo(configuration *config, const char *proj_name) {
   if (!gen_git_commands(config, commands, &repo_name))
     return -1;
 
-  chdir(proj_name);
   printf("Attempting to set up repository for %s...\n", repo_name);
   free(repo_name);
   repo_name = NULL;
@@ -396,6 +395,20 @@ int parse_args(int argc, char *argv[], configuration *config,
   return 0;
 }
 
+void replace_proj_name(const char **proj_name) {
+  char commands[2][400];
+
+  sprintf(commands[0],
+          "find . -type f -name '*' -exec sed -i "
+          "'s/insert_proj_name_here/%s/g' {} \\+",
+          *proj_name);
+  sprintf(commands[1], "find . -execdir rename insert_proj_name_here %s {} \\+",
+          *proj_name);
+
+  system(commands[0]);
+  system(commands[1]);
+}
+
 int main(int argc, char *argv[]) {
   const char *proj_name = "";
   const char *template_name = "";
@@ -419,6 +432,9 @@ int main(int argc, char *argv[]) {
   result = copy_dir(&config, proj_name, template_name);
   if (result == -1)
     return EXIT_FAILURE;
+
+  chdir(proj_name);
+  replace_proj_name(&proj_name);
 
   /* If use_git is true, attempt to create and init a new repo */
   if (config.use_git == 1) {
