@@ -165,6 +165,7 @@ int copy_dir(configuration *config, const char *proj_name,
     while ((ep = readdir(dp)) != NULL) {
       if (ep->d_type == DT_DIR && strcmp(ep->d_name, template_name) == 0) {
         system(command);
+        printf("Created project directory '%s'.\n", proj_name);
         return 0;
       }
     }
@@ -319,7 +320,7 @@ int new_git_repo(configuration *config, const char *proj_name) {
     return -1;
 
   chdir(proj_name);
-  printf("Attempting to set up %s...\n", repo_name);
+  printf("Attempting to set up repository for %s...\n", repo_name);
   free(repo_name);
   repo_name = NULL;
 
