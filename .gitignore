@@ -1,3 +1,4 @@
 /prod
 *.o
 .ccls
+**/.ccls-cache/
