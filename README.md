@@ -10,12 +10,21 @@ _/
 
 > Heavier than `touch`; **prod**uce.
 
-This is super WIP, but I thought I'd start on this project today (17th Dec 2019).
-Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
+`prod [PROJECT NAME] [LANGUAGE]` will:
 
 1. copy a language-specific boilerplate directory structure into a new directory with the name of the project,
 2. use a config file and otherwise questions to determine whether the user would like to run setup scripts and remove them,
 3. as well as create a new GitLab/GitHub repo based on the config/flags.
+
+## Requirements
+
+Currently only works on Linux and should work on macOS, but untested.
+You'll need to have:
+
+- `git`
+- `curl`
+- `rename` (the basic util-linux version will do)
+- `sed`
 
 ## Usage
 
@@ -26,15 +35,8 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 
 ## TODO
 
-- [x] Read the config file correctly
-- [x] Take language and name arguments
-- [x] Error checking for project names (git repo naming requirements)
-- [x] Use access tokens to set up new repositories
-- [x] Allow the use of arguments to temporarily adjust config for a specific project creation
-- [x] Reduce function length and handle command length more safely
-- [x] Develop more discreet access token storage
-- [x] Add a --nogit flag
-- [x] Find and replace occurrences of `insert_proj_name` in both file names and Makefiles
-- [x] Run setup.sh in root-level of project directory after copying
+- [ ] Remove template setup script in new project directory
+- [ ] Make install script
+- [ ] Compile versions and tag the first release
 - [ ] Add more languages
 - [ ] Support Windows
