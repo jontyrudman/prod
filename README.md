@@ -34,6 +34,7 @@ Once it's done, `prod [PROJECT NAME] [LANGUAGE]` will:
 - [x] Reduce function length and handle command length more safely
 - [x] Develop more discreet access token storage
 - [x] Add a --nogit flag
-- [ ] Find and replace occurrences of `insert_proj_name_here` in both file names and Makefiles
+- [x] Find and replace occurrences of `insert_proj_name` in both file names and Makefiles
 - [ ] Run scripts in the root-level of a template directory after copying
 - [ ] Add more languages
+- [ ] Support Windows
