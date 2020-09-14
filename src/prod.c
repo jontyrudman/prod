@@ -137,6 +137,38 @@ void list_languages(configuration *config) {
     perror("Couldn't open the template directory");
 }
 
+/**
+ * Lists all files and sub-directories at given path.
+ */
+char* list_files_recursive(const char *basePath)
+{
+  char path[1000];
+  struct dirent *dp;
+  DIR *dir = opendir(basePath);
+
+  // Unable to open directory stream
+  if (!dir)
+    return "fail";
+
+  while ((dp = readdir(dir)) != NULL)
+  {
+    if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
+    {
+
+      // Construct new path from our base path
+      strcpy(path, basePath);
+      strcat(path, "/");
+      strcat(path, dp->d_name);
+      printf("%s\n", path);
+
+      list_files_recursive(path);
+    }
+  }
+
+  closedir(dir);
+  return "success";
+}
+
 /* Copy over template directory */
 int copy_dir(configuration *config, const char *proj_name,
              const char *template_name) {
@@ -400,9 +432,9 @@ void replace_proj_name(const char **proj_name) {
 
   sprintf(commands[0],
           "find . -type f -name '*' -exec sed -i "
-          "'s/insert_proj_name_here/%s/g' {} \\+",
+          "'s/insert_proj_name/%s/g' {} \\+",
           *proj_name);
-  sprintf(commands[1], "find . -execdir rename insert_proj_name_here %s {} \\+",
+  sprintf(commands[1], "find . -execdir rename insert_proj_name %s {} \\+",
           *proj_name);
 
   system(commands[0]);

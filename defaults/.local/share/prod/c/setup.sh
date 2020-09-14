@@ -1,3 +1,3 @@
 #! /bin/sh
 
-sed -i "s/<projname>/$1/g" Makefile
+echo "This is a test of project name: insert_proj_name!"

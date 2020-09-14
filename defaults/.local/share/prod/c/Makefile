@@ -3,7 +3,7 @@
 
 SRC = $(wildcard src/*.c)
 OBJ = ${SRC:.c=.o}
-OUT = <projname>
+OUT = insert_proj_name
 
 # Fallback to gcc if clang not available
 CC = clang
