@@ -441,6 +441,27 @@ void replace_proj_name(const char **proj_name) {
   system(commands[1]);
 }
 
+/* Runs setup.sh in cwd */
+void run_setup_script() {
+  char user_input;
+  /* try to open file to read */
+  FILE *file;
+  file = fopen("./setup.sh", "r");
+  if (file) {
+    fclose(file);
+    printf("A setup script has been found! Would you like to run setup.sh in the new directory? (Y/n): ");
+    user_input = fgetc(stdin);
+    if (user_input == 'n' || user_input == 'N') {
+      printf("Not running setup script.\n");
+    } else {
+      printf("Running setup script...\n");
+      system("/bin/sh ./setup.sh");
+    }
+  } else {
+    printf("No setup script found.\n");
+  }
+}
+
 int main(int argc, char *argv[]) {
   const char *proj_name = "";
   const char *template_name = "";
@@ -467,6 +488,7 @@ int main(int argc, char *argv[]) {
 
   chdir(proj_name);
   replace_proj_name(&proj_name);
+  run_setup_script();
 
   /* If use_git is true, attempt to create and init a new repo */
   if (config.use_git == 1) {
