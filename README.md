@@ -1,3 +1,7 @@
+**Abandoned: this was a cute little project but I don't recommend anyone use it.**
+Most languages nowadays have various build systems that will set you up nicely, and every project is different.
+Writing this in C was borderline masochistic and lead to some corner-cutting to make things work without yet more platform-dependent libraries.
+
 ```
                                           _/   
      _/_/_/    _/  _/_/    _/_/      _/_/_/    
